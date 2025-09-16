@@ -19,8 +19,8 @@ struct MusicPlayerView: View {
 
     var body: some View {
         HStack {
-            AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace).padding(.all, 5)
-            MusicControlsView(showShuffleAndRepeat: showShuffleAndRepeat).drawingGroup().compositingGroup()
+            // AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace).padding(.all, 5)
+            MusicControlsView(vm: vm, albumArtNamespace: albumArtNamespace, showShuffleAndRepeat: showShuffleAndRepeat, ).drawingGroup().compositingGroup()
         }
     }
 }
@@ -67,7 +67,6 @@ struct AlbumArtView: View {
             } label: {
                 ZStack(alignment:.bottomTrailing) {
                     albumArtImage
-                    appIconOverlay
                 }
             }
             .buttonStyle(PlainButtonStyle())
@@ -122,9 +121,11 @@ struct AlbumArtView: View {
 
 struct MusicControlsView: View {
     @ObservedObject var musicManager = MusicManager.shared
+    @ObservedObject var vm: BoringViewModel
     @State private var sliderValue: Double = 0
     @State private var dragging: Bool = false
     @State private var lastDragged: Date = .distantPast
+    let albumArtNamespace: Namespace.ID
     let showShuffleAndRepeat: Bool
 
     var body: some View {
@@ -143,25 +144,27 @@ struct MusicControlsView: View {
                 musicSlider
             }
         }
-        .padding(.top, 10)
+        .padding(.top, 5)
         .padding(.leading, 5)
     }
 
     private func songInfo(width: CGFloat) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            MarqueeText(
-                $musicManager.songTitle, font: .headline, nsFont: .headline, textColor: .white,
-                frameWidth: width)
-            MarqueeText(
-                $musicManager.artistName,
-                font: .headline,
-                nsFont: .headline,
-                textColor: Defaults[.playerColorTinting]
-                    ? Color(nsColor: musicManager.avgColor)
-                        .ensureMinimumBrightness(factor: 0.6) : .gray,
-                frameWidth: width
-            )
-            .fontWeight(.medium)
+        HStack {
+            AlbumArtView(vm: vm, albumArtNamespace: albumArtNamespace)
+                .frame(width: 64, height: 64)
+            VStack(alignment: .leading, spacing: 0) {
+                MarqueeText(
+                    $musicManager.songTitle, font: .headline, nsFont: .headline, textColor: .white,
+                    frameWidth: width)
+                MarqueeText(
+                    $musicManager.artistName,
+                    font: .headline,
+                    nsFont: .headline,
+                    textColor: .gray,
+                    frameWidth: width
+                )
+                .fontWeight(.medium)
+            }
         }
     }
 
@@ -183,7 +186,7 @@ struct MusicControlsView: View {
                 MusicManager.shared.seek(to: newValue)
             }
             .padding(.top, 5)
-            .frame(height: 36)
+            .frame(height: 16)
         }
     }
 
@@ -316,22 +319,21 @@ struct MusicSliderView: View {
 
     var body: some View {
         VStack {
-            CustomSlider(
-                value: $sliderValue,
-                range: 0...duration,
-                color: Defaults[.sliderColor] == SliderColorEnum.albumArt
-                    ? Color(
-                        nsColor: color
-                    ).ensureMinimumBrightness(factor: 0.8)
-                    : Defaults[.sliderColor] == SliderColorEnum.accent ? .accentColor : .white,
-                dragging: $dragging,
-                lastDragged: $lastDragged,
-                onValueChange: onValueChange
-            )
-            .frame(height: 10, alignment: .center)
             HStack {
                 Text(timeString(from: sliderValue))
-                Spacer()
+                CustomSlider(
+                    value: $sliderValue,
+                    range: 0...duration,
+                    color: Defaults[.sliderColor] == SliderColorEnum.albumArt
+                        ? Color(
+                            nsColor: color
+                        ).ensureMinimumBrightness(factor: 0.8)
+                        : Defaults[.sliderColor] == SliderColorEnum.accent ? .accentColor : .white,
+                    dragging: $dragging,
+                    lastDragged: $lastDragged,
+                    onValueChange: onValueChange
+                )
+                .frame(height: 10, alignment: .center)
                 Text(timeString(from: duration))
             }
             .fontWeight(.medium)

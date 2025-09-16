@@ -32,7 +32,7 @@ struct HoverButton: View {
                             Image(systemName: icon)
                                 .foregroundColor(iconColor)
                                 .contentTransition(contentTransition)
-                                .font(scale == .large ? .largeTitle : .body)
+                                .font(scale == .large ? .largeTitle : .title2)
                         }
                 }
         }
